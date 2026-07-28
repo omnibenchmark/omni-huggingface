@@ -1,0 +1,59 @@
+# Example: fetch a single-cell dataset and the scGPT weights from Hugging Face.
+#
+# Both stages use the same module; only the parameters differ. The dataset
+# stage materialises the .h5ad itself, the model stage writes a manifest
+# pointing at the weights in the shared HF cache (they are big; nothing is
+# copied into the benchmark output tree).
+
+id: hf_scgpt_example
+description: >
+  Download a PBMC dataset and the scGPT model weights from the Hugging Face
+  Hub using omni-huggingface.
+version: "0.0.1"
+benchmarker: "example"
+# named outputs (design 008) ship in the 0.7.0 API; on an older omnibenchmark
+# no --output flags are passed and the module falls back to mirroring the
+# snapshot into --output_dir.
+api_version: "0.7.0"
+
+software_backend: conda
+
+software_environments:
+  omni_huggingface:
+    name: omni-huggingface conda env
+    conda: ../../envs/omni-huggingface.yml
+
+stages:
+  - id: data
+    modules:
+      - id: pbmc3k
+        name: "PBMC 3k (preprocessed h5ad)"
+        software_environment: omni_huggingface
+        repository:
+          url: https://github.com/btraven00/omni-huggingface
+          commit: main
+        parameters:
+          - repo: "datavil/pbmc3k"
+            repo_type: "dataset"
+            files: "*.h5ad"
+    outputs:
+      - id: data.h5ad
+        path: "{dataset}.h5ad"
+
+  - id: model
+    inputs:
+      - data.h5ad
+    modules:
+      - id: scgpt
+        name: "scGPT weights (tdc/scGPT mirror)"
+        software_environment: omni_huggingface
+        repository:
+          url: https://github.com/btraven00/omni-huggingface
+          commit: main
+        parameters:
+          - repo: "tdc/scGPT"
+            repo_type: "model"
+            files: "config.json,model.safetensors"
+    outputs:
+      - id: model.weights
+        path: "{dataset}_scgpt.json"

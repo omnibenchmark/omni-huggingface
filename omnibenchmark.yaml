@@ -1,0 +1,7 @@
+# OmniBenchmark Module Configuration
+
+entrypoints:
+  default: run.py
+
+environments:
+  conda: envs/omni-huggingface.yml

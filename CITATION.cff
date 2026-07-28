@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this module in your publication, please cite as below."
+type: software
+title: "omni-huggingface"
+abstract: |
+  Hugging Face Hub download module for omnibenchmark pipelines: fetches
+  datasets and model weights into the shared HF cache and materialises them
+  as named benchmark outputs.
+authors:
+  - family-names: "carrillo"
+    given-names: "ben"
+    email: "ben.uzh@proton.me"
+date-released: "2026-07-28"
+version: "0.1.0"
+license: MIT
+keywords:
+  - huggingface
+  - data-download
+  - model-weights
+  - benchmark
+  - omnibenchmark
+  - module
+references:
+  - title: "huggingface_hub"
+    type: software
+    url: "https://github.com/huggingface/huggingface_hub"
+  - title: "scGPT: toward building a foundation model for single-cell multi-omics using generative AI"
+    type: article
+    authors:
+      - family-names: "Cui"
+        given-names: "Haotian"
+      - family-names: "Wang"
+        given-names: "Bo"
+    doi: "10.1038/s41592-024-02201-0"
