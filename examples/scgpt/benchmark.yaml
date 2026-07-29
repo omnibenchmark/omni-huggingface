@@ -1,9 +1,14 @@
 # Example: scGPT's zero-shot cell embedding, the reference-mapping tutorial.
-# Three stages, all served by this repo through named entrypoints:
+# Four steps, all served by this repo through named entrypoints:
 #
-#   data     default entrypoint  -> 97 MB annotated PBMC h5ad
-#   model    default entrypoint  -> 196 MB scGPT checkpoint in the HF cache
-#   metrics  scgpt_metrics       -> embeds cells, scores them, prints a report
+#   data       default entrypoint  -> 97 MB annotated PBMC h5ad
+#   model      default entrypoint  -> 196 MB scGPT checkpoint in the HF cache
+#   embedding  embed_scgpt/_pca    -> one cell embedding per module, no scoring
+#   metrics    collect_metrics     -> collector: scores every embedding, one table
+#
+# Prediction, baseline and scoring are separate on purpose: adding a competing
+# embedding means adding a module to the embedding stage, and the collector
+# picks it up with no change.
 #
 # CPU only: ~2 min per 200 cells at a 600-gene context, ~4 min at 1200.
 #
@@ -16,7 +21,7 @@ description: >
   Hub with omni-huggingface.
 version: "0.0.1"
 benchmarker: "example"
-# named outputs (design 008) ship in the 0.7.0 API; on an older omnibenchmark
+# named outputs (design 009) ship in the 0.7.0 API; on an older omnibenchmark
 # no --output flags are passed and the modules fall back to --output_dir.
 api_version: "0.7.0"
 
@@ -66,23 +71,48 @@ stages:
       - id: model.manifest
         path: "{name}.json"
 
-  - id: metrics
+  - id: embedding
     inputs:
       - data.h5ad
       - model.manifest
     modules:
-      - id: cell_type_separability
-        name: "Cell-type separability of the zero-shot embedding"
+      - id: scgpt
+        name: "scGPT zero-shot cell embedding"
         software_environment: omni_scgpt
         repository:
           url: https://github.com/btraven00/omni-huggingface
           commit: main
-          entrypoint: scgpt_metrics
+          entrypoint: embed_scgpt
         parameters:
           - cells: 200
             max_length: 600
           - cells: 200
             max_length: 1200
+
+      - id: pca
+        name: "PCA baseline on the same cells"
+        software_environment: omni_scgpt
+        repository:
+          url: https://github.com/btraven00/omni-huggingface
+          commit: main
+          entrypoint: embed_pca
+        parameters:
+          - cells: 200
+            components: 50
     outputs:
-      - id: metrics.cell_type_separability
-        path: "{name}_ctx{params.max_length}.json"
+      - id: embedding.cells
+        path: "{name}.npz"
+
+metric_collectors:
+  - id: separability
+    name: "Cell-type separability of every embedding"
+    software_environment: omni_scgpt
+    repository:
+      url: https://github.com/btraven00/omni-huggingface
+      commit: main
+      entrypoint: collect_metrics
+    inputs:
+      - embedding.cells
+    outputs:
+      - id: metrics.separability
+        path: "metrics/metrics.json"
