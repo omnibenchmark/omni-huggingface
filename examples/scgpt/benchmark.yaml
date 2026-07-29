@@ -49,12 +49,12 @@ stages:
             repo_type: "dataset"
             files: "pbmc_atlas_rna_binning_10_test.h5ad"
     outputs:
-      - id: data.h5ad
+      - id: data_h5ad
         path: "{name}.h5ad"
 
   - id: model
     inputs:
-      - data.h5ad
+      - data_h5ad
     modules:
       - id: scgpt_human
         name: "scGPT whole-human checkpoint (perturblab/scgpt-human)"
@@ -68,13 +68,13 @@ stages:
             revision: "571a0445d68fa48381f863ff75dd4f6d0eae3dfc"
             files: "args.json,best_model.pt,vocab.json"
     outputs:
-      - id: model.manifest
+      - id: model_manifest
         path: "{name}.json"
 
   - id: embedding
     inputs:
-      - data.h5ad
-      - model.manifest
+      - data_h5ad
+      - model_manifest
     modules:
       - id: scgpt
         name: "scGPT zero-shot cell embedding"
@@ -100,7 +100,7 @@ stages:
           - cells: 200
             components: 50
     outputs:
-      - id: embedding.cells
+      - id: embedding_cells
         path: "{name}.npz"
 
 metric_collectors:
@@ -112,7 +112,7 @@ metric_collectors:
       commit: main
       entrypoint: collect_metrics
     inputs:
-      - embedding.cells
+      - embedding_cells
     outputs:
-      - id: metrics.separability
+      - id: metrics_separability
         path: "metrics/metrics.json"

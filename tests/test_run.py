@@ -13,17 +13,17 @@ from run import materialize, parse_outputs, snapshot_files  # noqa: E402
 
 def test():
     assert parse_outputs(["/a/b.h5ad"]) == {"default": Path("/a/b.h5ad")}
-    assert parse_outputs(["m.weights=/a/b.json", "m.raw=/a/c.zip"]) == {
-        "m.weights": Path("/a/b.json"),
-        "m.raw": Path("/a/c.zip"),
+    assert parse_outputs(["m_weights=/a/b.json", "m_raw=/a/c.zip"]) == {
+        "m_weights": Path("/a/b.json"),
+        "m_raw": Path("/a/c.zip"),
     }
     # ob 0.6 passes a workflow-relative path but runs us from the module checkout:
     # the file must still land in --output_dir, not under the module
     assert parse_outputs(["data/D1/.abc/D1.h5ad"], "/out/data/D1/.abc") == {
         "default": Path("/out/data/D1/.abc/D1.h5ad")
     }
-    assert parse_outputs(["m.raw=data/D1/.abc/D1.zip"], "/out/data/D1/.abc") == {
-        "m.raw": Path("/out/data/D1/.abc/D1.zip")
+    assert parse_outputs(["m_raw=data/D1/.abc/D1.zip"], "/out/data/D1/.abc") == {
+        "m_raw": Path("/out/data/D1/.abc/D1.zip")
     }
     assert parse_outputs(["/abs/D1.h5ad"], "/out") == {"default": Path("/abs/D1.h5ad")}
 
@@ -40,9 +40,9 @@ def test():
         materialize(
             snap,
             {
-                "m.manifest": out / "weights.json",
-                "m.bundle": out / "weights.zip",
-                "m.data": out / "pbmc.h5ad",
+                "m_manifest": out / "weights.json",
+                "m_bundle": out / "weights.zip",
+                "m_data": out / "pbmc.h5ad",
             },
             meta,
         )
@@ -57,7 +57,7 @@ def test():
 
         # ambiguous plain-file output: several candidates, no basename match
         try:
-            materialize(snap, {"m.data": out / "nope.h5ad"}, meta)
+            materialize(snap, {"m_data": out / "nope.h5ad"}, meta)
         except SystemExit as e:
             assert "matches none" in str(e)
         else:

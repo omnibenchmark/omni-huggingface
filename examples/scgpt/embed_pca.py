@@ -4,7 +4,7 @@
 Exists so the collector has something to compare scGPT against: normalise,
 log1p, PCA. Any flags it does not know (the model manifest, say) are ignored.
 
-    --data.h5ad   annotated AnnData with gene symbols and a label column
+    --data_h5ad   annotated AnnData with gene symbols and a label column
 """
 
 import argparse
@@ -14,7 +14,7 @@ from _data import load_cells, output_path, save_embedding
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--data.h5ad", dest="h5ad", required=True)
+    p.add_argument("--data_h5ad", dest="h5ad", required=True)
     p.add_argument("--cells", type=int, default=200, help="cells to subsample")
     p.add_argument("--label_col", default="annot", help="obs column with cell types")
     p.add_argument("--components", type=int, default=50, help="principal components")

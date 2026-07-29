@@ -5,8 +5,8 @@ Runs scGPT's own `scgpt.tasks.embed_data` (the reference-mapping tutorial's
 core call) on an annotated AnnData and writes the resulting cell embedding.
 Scoring happens in the metric collector, so this entrypoint stays a predictor.
 
-    --data.h5ad        annotated AnnData with gene symbols and a label column
-    --model.manifest   manifest pointing at a scGPT checkpoint directory in the
+    --data_h5ad        annotated AnnData with gene symbols and a label column
+    --model_manifest   manifest pointing at a scGPT checkpoint directory in the
                        cache (args.json + best_model.pt + vocab.json)
 """
 
@@ -19,8 +19,8 @@ from _data import load_cells, output_path, save_embedding
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--data.h5ad", dest="h5ad", required=True)
-    p.add_argument("--model.manifest", dest="manifest", required=True)
+    p.add_argument("--data_h5ad", dest="h5ad", required=True)
+    p.add_argument("--model_manifest", dest="manifest", required=True)
     p.add_argument("--cells", type=int, default=200, help="cells to subsample")
     p.add_argument("--label_col", default="annot", help="obs column with cell types")
     p.add_argument("--max_length", type=int, default=1200, help="genes per cell")

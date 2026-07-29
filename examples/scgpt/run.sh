@@ -15,18 +15,18 @@ pixi python "$ROOT/run.py" \
   --repo Chtholly17/PBMC_ATLAS \
   --repo_type dataset \
   --files "pbmc_atlas_rna_binning_10_test.h5ad" \
-  --output "data.h5ad=$OUT/pbmc_atlas.h5ad"
+  --output "data_h5ad=$OUT/pbmc_atlas.h5ad"
 
 pixi python "$ROOT/run.py" \
   --repo perturblab/scgpt-human \
   --repo_type model \
   --revision 571a0445d68fa48381f863ff75dd4f6d0eae3dfc \
   --files "args.json,best_model.pt,vocab.json" \
-  --output "model.manifest=$OUT/scgpt_human_model.json"
+  --output "model_manifest=$OUT/scgpt_human_model.json"
 
 pixi python "$ROOT/examples/scgpt/scgpt_metrics.py" \
-  --data.h5ad "$OUT/pbmc_atlas.h5ad" \
-  --model.manifest "$OUT/scgpt_human_model.json" \
+  --data_h5ad "$OUT/pbmc_atlas.h5ad" \
+  --model_manifest "$OUT/scgpt_human_model.json" \
   --cells 200 \
   --max_length 1200 \
   --output "metrics.cell_type_separability=$OUT/cell_type_separability_metrics.json"

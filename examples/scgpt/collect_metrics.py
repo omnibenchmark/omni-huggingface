@@ -59,7 +59,7 @@ def report(header, rows):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--embedding.cells", dest="embeddings", nargs="+", required=True)
+    p.add_argument("--embedding_cells", dest="embeddings", nargs="+", required=True)
     p.add_argument("--neighbors", type=int, default=15, help="k for the k-NN classifier")
     p.add_argument("--output_dir")
     p.add_argument("--name")
