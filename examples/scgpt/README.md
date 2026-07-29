@@ -17,7 +17,7 @@ data ──► model ──► embedding ┬── scgpt (ctx 600)  ─┐
 ```
 
 ```sh
-ob run benchmark examples/scgpt/benchmark.yaml
+PIP_NO_DEPS=1 ob run benchmark examples/scgpt/benchmark.yaml
 # or, without omnibenchmark:
 bash examples/scgpt/run.sh out
 ```
@@ -56,8 +56,12 @@ collector scores each one independently — no row alignment across modules.
 - The PBMC shard stores expression pre-binned to 10 levels, not raw counts.
   scGPT re-bins into its own 51 bins and the binning is monotone per cell, so the
   ordering survives — but the input is coarser than the tutorial's.
-- scGPT is installed `--no-deps`: its metadata pins `scvi-tools<1.0` and
-  `orbax<0.1.8`, which the embedding path never imports.
+- scGPT must be installed without its dependencies — its metadata pins
+  `scvi-tools<1.0`, `orbax<0.1.8` and other 2023-era packages the embedding path
+  never imports and that no longer resolve. A conda env file cannot express
+  `--no-deps` (conda hands the `pip:` list to pip as a requirements file, which
+  rejects that option), so the run needs `PIP_NO_DEPS=1` in the environment. The
+  pixi manifest passes `--no-deps` directly and needs nothing extra.
 - Cell types with fewer than 5 cells are dropped — 5-fold stratified CV needs
   them.
 - Collector nodes get no `--output` flags, so `collect_metrics.py` writes a fixed
