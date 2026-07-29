@@ -1,7 +1,10 @@
 # OmniBenchmark Module Configuration
 
 entrypoints:
+  # download a dataset or model from the Hugging Face Hub
   default: run.py
+  # zero-shot cell embedding metrics for a scGPT checkpoint downloaded by `default`
+  scgpt_metrics: examples/scgpt/scgpt_metrics.py
 
 environments:
   conda: envs/omni-huggingface.yml

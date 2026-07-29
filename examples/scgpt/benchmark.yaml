@@ -1,19 +1,23 @@
-# Example: fetch a single-cell dataset and the scGPT weights from Hugging Face.
+# Example: scGPT's zero-shot cell embedding, the reference-mapping tutorial.
+# Three stages, all served by this repo through named entrypoints:
 #
-# Both stages use the same module; only the parameters differ. The dataset
-# stage materialises the .h5ad itself, the model stage writes a manifest
-# pointing at the weights in the shared HF cache (they are big; nothing is
-# copied into the benchmark output tree).
+#   data     default entrypoint  -> 97 MB annotated PBMC h5ad
+#   model    default entrypoint  -> 196 MB scGPT checkpoint in the HF cache
+#   metrics  scgpt_metrics       -> embeds cells, scores them, prints a report
+#
+# CPU only: ~2 min per 200 cells at a 600-gene context, ~4 min at 1200.
+#
+#   ob run benchmark -b examples/scgpt/benchmark.yaml --local
 
-id: hf_scgpt_example
+id: scgpt_zero_shot_embedding
 description: >
-  Download a PBMC dataset and the scGPT model weights from the Hugging Face
-  Hub using omni-huggingface.
+  Zero-shot cell embedding with scGPT, scored on cell-type separability
+  against a PCA baseline. Model and data both fetched from the Hugging Face
+  Hub with omni-huggingface.
 version: "0.0.1"
 benchmarker: "example"
 # named outputs (design 008) ship in the 0.7.0 API; on an older omnibenchmark
-# no --output flags are passed and the module falls back to mirroring the
-# snapshot into --output_dir.
+# no --output flags are passed and the modules fall back to --output_dir.
 api_version: "0.7.0"
 
 software_backend: conda
@@ -22,20 +26,23 @@ software_environments:
   omni_huggingface:
     name: omni-huggingface conda env
     conda: ../../envs/omni-huggingface.yml
+  omni_scgpt:
+    name: omni-huggingface + scGPT runtime
+    conda: ../../envs/omni-scgpt.yml
 
 stages:
   - id: data
     modules:
-      - id: pbmc3k
-        name: "PBMC 3k (preprocessed h5ad)"
+      - id: pbmc_atlas
+        name: "PBMC atlas, annotated (Chtholly17/PBMC_ATLAS)"
         software_environment: omni_huggingface
         repository:
           url: https://github.com/btraven00/omni-huggingface
           commit: main
         parameters:
-          - repo: "datavil/pbmc3k"
+          - repo: "Chtholly17/PBMC_ATLAS"
             repo_type: "dataset"
-            files: "*.h5ad"
+            files: "pbmc_atlas_rna_binning_10_test.h5ad"
     outputs:
       - id: data.h5ad
         path: "{dataset}.h5ad"
@@ -44,16 +51,38 @@ stages:
     inputs:
       - data.h5ad
     modules:
-      - id: scgpt
-        name: "scGPT weights (tdc/scGPT mirror)"
+      - id: scgpt_human
+        name: "scGPT whole-human checkpoint (perturblab/scgpt-human)"
         software_environment: omni_huggingface
         repository:
           url: https://github.com/btraven00/omni-huggingface
           commit: main
         parameters:
-          - repo: "tdc/scGPT"
+          - repo: "perturblab/scgpt-human"
             repo_type: "model"
-            files: "config.json,model.safetensors"
+            revision: "571a0445d68fa48381f863ff75dd4f6d0eae3dfc"
+            files: "args.json,best_model.pt,vocab.json"
     outputs:
-      - id: model.weights
-        path: "{dataset}_scgpt.json"
+      - id: model.manifest
+        path: "{dataset}_model.json"
+
+  - id: metrics
+    inputs:
+      - data.h5ad
+      - model.manifest
+    modules:
+      - id: cell_type_separability
+        name: "Cell-type separability of the zero-shot embedding"
+        software_environment: omni_scgpt
+        repository:
+          url: https://github.com/btraven00/omni-huggingface
+          commit: main
+          entrypoint: scgpt_metrics
+        parameters:
+          - cells: 200
+            max_length: 600
+          - cells: 200
+            max_length: 1200
+    outputs:
+      - id: metrics.cell_type_separability
+        path: "{dataset}_metrics.json"

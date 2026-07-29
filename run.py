@@ -25,12 +25,23 @@ import zipfile
 from pathlib import Path
 
 
-def parse_outputs(values):
-    """['id=path', ...] or ['path'] -> {id: Path}."""
+def parse_outputs(values, output_dir=None):
+    """['id=path', ...] or ['path'] -> {id: Path}.
+
+    Design 008 says these paths are absolute, but omnibenchmark 0.6 passes
+    snakemake's workflow-relative path while running us from the module
+    checkout, so a relative path would land inside the module. A stage's
+    declared outputs live in --output_dir, so resolve against that.
+    """
     outputs = {}
     for value in values:
-        oid, sep, path = value.partition("=")
-        outputs[oid if sep else "default"] = Path(path if sep else oid)
+        oid, sep, raw = value.partition("=")
+        if not sep:
+            oid, raw = "default", oid
+        path = Path(raw)
+        if not path.is_absolute() and output_dir:
+            path = Path(output_dir) / path.name
+        outputs[oid] = path
     return outputs
 
 
@@ -102,16 +113,12 @@ def main():
         "snapshot": str(snapshot),
     }
 
-    outputs = parse_outputs(args.output)
+    outputs = parse_outputs(args.output, args.output_dir)
     if not outputs:
         # pre-0.7 API: no --output flags, mirror the snapshot into --output_dir.
         out = Path(args.output_dir or ".")
         outputs = {f.name: out / f.name for f in snapshot_files(snapshot)}
     materialize(snapshot, outputs, meta)
-
-    # ponytail: no model instantiation — that drags in torch + the scGPT package
-    # for something only the consuming module knows how to do. It gets the
-    # snapshot path from the manifest and loads the weights itself.
 
 
 if __name__ == "__main__":

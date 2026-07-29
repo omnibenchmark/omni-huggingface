@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-check for the output-materialisation logic (no network)."""
+"""Self-check for the output-materialisation and report logic (no network)."""
 
 import json
 import sys
@@ -8,6 +8,8 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "examples/scgpt"))
+from scgpt_metrics import report  # noqa: E402
 from run import materialize, parse_outputs, snapshot_files  # noqa: E402
 
 
@@ -17,6 +19,15 @@ def test():
         "m.weights": Path("/a/b.json"),
         "m.raw": Path("/a/c.zip"),
     }
+    # ob 0.6 passes a workflow-relative path but runs us from the module checkout:
+    # the file must still land in --output_dir, not under the module
+    assert parse_outputs(["data/D1/.abc/D1.h5ad"], "/out/data/D1/.abc") == {
+        "default": Path("/out/data/D1/.abc/D1.h5ad")
+    }
+    assert parse_outputs(["m.raw=data/D1/.abc/D1.zip"], "/out/data/D1/.abc") == {
+        "m.raw": Path("/out/data/D1/.abc/D1.zip")
+    }
+    assert parse_outputs(["/abs/D1.h5ad"], "/out") == {"default": Path("/abs/D1.h5ad")}
 
     with tempfile.TemporaryDirectory() as tmp:
         snap, out = Path(tmp) / "snap", Path(tmp) / "out"
@@ -53,6 +64,15 @@ def test():
             assert "matches none" in str(e)
         else:
             raise AssertionError("expected a SystemExit for an unmatched output")
+
+    # the report tabulates one row per representation, in insertion order
+    rows = {
+        "scGPT zero-shot": {"dim": 512, "knn_acc": 0.855, "macro_f1": 0.448, "ari": 0.410},
+        "PCA(50) baseline": {"dim": 50, "knn_acc": 0.860, "macro_f1": 0.451, "ari": 0.474},
+    }
+    text = report("zero-shot cell embedding", rows)
+    assert text.splitlines()[-2].split()[0] == "scGPT"
+    assert "0.474" in text
 
     print("OK")
 

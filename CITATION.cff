@@ -23,12 +23,9 @@ keywords:
 references:
   - title: "huggingface_hub"
     type: software
-    url: "https://github.com/huggingface/huggingface_hub"
-  - title: "scGPT: toward building a foundation model for single-cell multi-omics using generative AI"
-    type: article
     authors:
-      - family-names: "Cui"
-        given-names: "Haotian"
-      - family-names: "Wang"
-        given-names: "Bo"
-    doi: "10.1038/s41592-024-02201-0"
+      - name: "Hugging Face, Inc."
+        email: "julien@huggingface.co"
+        website: "https://huggingface.co"
+    license: Apache-2.0
+    repository-code: "https://github.com/huggingface/huggingface_hub"
