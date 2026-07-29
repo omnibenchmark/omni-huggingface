@@ -45,7 +45,7 @@ stages:
             files: "pbmc_atlas_rna_binning_10_test.h5ad"
     outputs:
       - id: data.h5ad
-        path: "{dataset}.h5ad"
+        path: "{name}.h5ad"
 
   - id: model
     inputs:
