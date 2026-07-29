@@ -84,7 +84,7 @@ def materialize(snapshot: Path, outputs, meta):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--repo", required=True, help="HF repo id, e.g. tdc/scGPT")
+    p.add_argument("--repo", required=True, help="HF repo id, e.g. org/model-name")
     p.add_argument("--repo_type", default="model", choices=["model", "dataset"])
     p.add_argument("--revision", help="branch, tag or commit sha (default: main)")
     p.add_argument("--files", help="comma-separated globs to restrict the download")

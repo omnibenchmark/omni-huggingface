@@ -7,7 +7,7 @@
 #
 # CPU only: ~2 min per 200 cells at a 600-gene context, ~4 min at 1200.
 #
-#   ob run benchmark -b examples/scgpt/benchmark.yaml --local
+#   ob run benchmark examples/scgpt/benchmark.yaml
 
 id: scgpt_zero_shot_embedding
 description: >
@@ -27,8 +27,8 @@ software_environments:
     name: omni-huggingface conda env
     conda: ../../envs/omni-huggingface.yml
   omni_scgpt:
-    name: omni-huggingface + scGPT runtime
-    conda: ../../envs/omni-scgpt.yml
+    name: scGPT runtime for this example
+    conda: env.yml
 
 stages:
   - id: data
@@ -64,7 +64,7 @@ stages:
             files: "args.json,best_model.pt,vocab.json"
     outputs:
       - id: model.manifest
-        path: "{dataset}_model.json"
+        path: "{name}.json"
 
   - id: metrics
     inputs:
@@ -85,4 +85,4 @@ stages:
             max_length: 1200
     outputs:
       - id: metrics.cell_type_separability
-        path: "{dataset}_metrics.json"
+        path: "{name}_ctx{params.max_length}.json"

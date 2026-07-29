@@ -22,11 +22,20 @@ Writes a metrics JSON at --output and prints a report to stdout.
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root, for run.py
-from run import parse_outputs  # noqa: E402
+
+def output_path(values, output_dir, default="metrics.json"):
+    """--output [id=]path -> where to write. Kept self-contained on purpose:
+    this example must not import from the module it sits next to.
+
+    omnibenchmark 0.6 passes snakemake's workflow-relative path while running
+    us from the module checkout, so a relative path is resolved against
+    --output_dir, where a stage's declared outputs live.
+    """
+    raw = (values[0].partition("=")[2] or values[0]) if values else default
+    path = Path(raw)
+    return path if path.is_absolute() else Path(output_dir or ".") / path.name
 
 
 def score(features, labels, neighbors, seed=0):
@@ -141,8 +150,7 @@ def main():
         "max_length": args.max_length,
         "representations": rows,
     }
-    outputs = parse_outputs(args.output, args.output_dir)
-    dest = next(iter(outputs.values()), Path(args.output_dir or ".") / "metrics.json")
+    dest = output_path(args.output, args.output_dir)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(metrics, indent=2) + "\n")
 

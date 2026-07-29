@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-check for the output-materialisation and report logic (no network)."""
+"""Self-check for the module's output materialisation (no network)."""
 
 import json
 import sys
@@ -8,8 +8,6 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "examples/scgpt"))
-from scgpt_metrics import report  # noqa: E402
 from run import materialize, parse_outputs, snapshot_files  # noqa: E402
 
 
@@ -38,20 +36,20 @@ def test():
         (snap / "pbmc.h5ad").write_text("data")
         assert [f.name for f in snapshot_files(snap)] == ["config.json", "pbmc.h5ad"]
 
-        meta = {"repo": "tdc/scGPT", "sha": "abc"}
+        meta = {"repo": "org/model", "sha": "abc"}
         materialize(
             snap,
             {
-                "m.manifest": out / "scgpt.json",
-                "m.bundle": out / "scgpt.zip",
+                "m.manifest": out / "weights.json",
+                "m.bundle": out / "weights.zip",
                 "m.data": out / "pbmc.h5ad",
             },
             meta,
         )
-        manifest = json.loads((out / "scgpt.json").read_text())
-        assert manifest["repo"] == "tdc/scGPT"
+        manifest = json.loads((out / "weights.json").read_text())
+        assert manifest["repo"] == "org/model"
         assert manifest["files"] == ["config.json", "pbmc.h5ad"]
-        assert zipfile.ZipFile(out / "scgpt.zip").namelist() == [
+        assert zipfile.ZipFile(out / "weights.zip").namelist() == [
             "config.json",
             "pbmc.h5ad",
         ]
@@ -64,15 +62,6 @@ def test():
             assert "matches none" in str(e)
         else:
             raise AssertionError("expected a SystemExit for an unmatched output")
-
-    # the report tabulates one row per representation, in insertion order
-    rows = {
-        "scGPT zero-shot": {"dim": 512, "knn_acc": 0.855, "macro_f1": 0.448, "ari": 0.410},
-        "PCA(50) baseline": {"dim": 50, "knn_acc": 0.860, "macro_f1": 0.451, "ari": 0.474},
-    }
-    text = report("zero-shot cell embedding", rows)
-    assert text.splitlines()[-2].split()[0] == "scGPT"
-    assert "0.474" in text
 
     print("OK")
 

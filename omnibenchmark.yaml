@@ -3,7 +3,7 @@
 entrypoints:
   # download a dataset or model from the Hugging Face Hub
   default: run.py
-  # zero-shot cell embedding metrics for a scGPT checkpoint downloaded by `default`
+  # example only, not part of the module contract: see examples/scgpt/
   scgpt_metrics: examples/scgpt/scgpt_metrics.py
 
 environments:

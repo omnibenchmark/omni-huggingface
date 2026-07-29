@@ -1,0 +1,27 @@
+# Dev environment for this example only — the module itself needs nothing but
+# python + huggingface_hub (see ../../pixi.toml).
+#
+# scGPT is installed --no-deps: its metadata pins scvi-tools<1.0, orbax<0.1.8
+# and other 2023-era packages that the zero-shot embedding path never imports.
+[workspace]
+authors = ["ben <ben.uzh@proton.me>"]
+channels = ["conda-forge"]
+name = "omni-huggingface-scgpt-example"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+install-scgpt = "pip install --no-deps git+https://github.com/bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4"
+export-env = "pixi workspace export conda-environment --name omni-scgpt env.yml  # then re-add the pip block by hand"
+
+[dependencies]
+python = ">=3.10"
+huggingface_hub = "*"
+pytorch-cpu = "*"
+scanpy = "*"
+anndata = "*"
+scikit-learn = "*"
+tqdm = "*"
+pip = "*"
+ipython = ">=9.15.0,<10"
+datasets = ">=5.0.0,<6"

@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="${1:-out}"
 mkdir -p "$OUT"
 
-pixi() { command pixi run --manifest-path "$ROOT/pixi.toml" -e scgpt "$@"; }
+pixi() { command pixi run --manifest-path "$(dirname "$0")/pixi.toml" "$@"; }
 
 pixi python "$ROOT/run.py" \
   --repo Chtholly17/PBMC_ATLAS \
