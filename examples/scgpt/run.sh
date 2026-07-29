@@ -24,11 +24,19 @@ pixi python "$ROOT/run.py" \
   --files "args.json,best_model.pt,vocab.json" \
   --output "model_manifest=$OUT/scgpt_human_model.json"
 
-pixi python "$ROOT/examples/scgpt/scgpt_metrics.py" \
+pixi python "$ROOT/examples/scgpt/embed_scgpt.py" \
   --data_h5ad "$OUT/pbmc_atlas.h5ad" \
   --model_manifest "$OUT/scgpt_human_model.json" \
-  --cells 200 \
-  --max_length 1200 \
-  --output "metrics.cell_type_separability=$OUT/cell_type_separability_metrics.json"
+  --cells 200 --max_length 1200 \
+  --output "embedding_cells=$OUT/scgpt.npz"
 
-echo "Metrics written to $OUT/cell_type_separability_metrics.json"
+pixi python "$ROOT/examples/scgpt/embed_pca.py" \
+  --data_h5ad "$OUT/pbmc_atlas.h5ad" \
+  --cells 200 --components 50 \
+  --output "embedding_cells=$OUT/pca.npz"
+
+pixi python "$ROOT/examples/scgpt/collect_metrics.py" \
+  --embedding_cells "$OUT/scgpt.npz" "$OUT/pca.npz" \
+  --output_dir "$OUT"
+
+echo "Metrics written to $OUT/metrics.json"

@@ -3,7 +3,8 @@
 entrypoints:
   # download a dataset or model from the Hugging Face Hub
   default: run.py
-  # example only, not part of the module contract: see examples/scgpt/
+
+  # examples only, not part of the module contract: see examples/scgpt/
   embed_scgpt: examples/scgpt/embed_scgpt.py
   embed_pca: examples/scgpt/embed_pca.py
   collect_metrics: examples/scgpt/collect_metrics.py
