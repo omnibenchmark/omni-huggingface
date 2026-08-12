@@ -55,6 +55,19 @@ def snapshot_files(snapshot: Path):
     )
 
 
+def mirror(snapshot: Path, out: Path):
+    """pre-0.7 fallback: copy the snapshot into out under its original filenames.
+
+    Deliberately not routed through materialize(): its suffix dispatch is for
+    *declared outputs*, and would rewrite every downloaded `*.json` (a config, a
+    vocabulary) into a manifest describing itself.
+    """
+    for f in snapshot_files(snapshot):
+        dest = out / f.relative_to(snapshot)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(f, dest)
+
+
 def materialize(snapshot: Path, outputs, meta):
     files = snapshot_files(snapshot)
     if not files:
@@ -115,10 +128,9 @@ def main():
 
     outputs = parse_outputs(args.output, args.output_dir)
     if not outputs:
-        # pre-0.7 API: no --output flags, mirror the snapshot into --output_dir.
-        out = Path(args.output_dir or ".")
-        outputs = {f.name: out / f.name for f in snapshot_files(snapshot)}
-    materialize(snapshot, outputs, meta)
+        mirror(snapshot, Path(args.output_dir or "."))  # pre-0.7 API: no --output flags
+    else:
+        materialize(snapshot, outputs, meta)
 
 
 if __name__ == "__main__":

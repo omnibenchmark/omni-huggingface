@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from run import materialize, parse_outputs, snapshot_files  # noqa: E402
+from run import materialize, mirror, parse_outputs, snapshot_files  # noqa: E402
 
 
 def test():
@@ -54,6 +54,13 @@ def test():
             "pbmc.h5ad",
         ]
         assert (out / "pbmc.h5ad").read_text() == "data"
+
+        # the pre-0.7 fallback mirrors verbatim: a downloaded *.json stays itself
+        # and must not be rewritten into a manifest of itself
+        mirror(snap, out / "mirrored")
+        assert (out / "mirrored" / "config.json").read_text() == "{}"
+        assert (out / "mirrored" / "pbmc.h5ad").read_text() == "data"
+        assert not (out / "mirrored" / ".gitattributes").exists()
 
         # ambiguous plain-file output: several candidates, no basename match
         try:
