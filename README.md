@@ -10,7 +10,7 @@ at the paths the benchmark declares (it needs [named outputs](https://github.com
 modules:
   - id: weights
     repository:
-      url: https://github.com/btraven00/omni-huggingface
+      url: https://github.com/omnibenchmark/omni-huggingface
       commit: main
     parameters:
       - repo: "perturblab/scgpt-human"
