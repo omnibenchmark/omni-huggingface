@@ -35,6 +35,14 @@ def test():
         (snap / "config.json").write_text("{}")
         (snap / "pbmc.h5ad").write_text("data")
         assert [f.name for f in snapshot_files(snap)] == ["config.json", "pbmc.h5ad"]
+        # a snapshot dir holds every cached file of its revision; --files keeps the asked-for ones
+        (snap / "pbmc_50k.h5ad").write_text("other rung, fetched by an earlier node")
+        assert [f.name for f in snapshot_files(snap, ["pbmc.h5ad"])] == ["pbmc.h5ad"]
+        assert [f.name for f in snapshot_files(snap, ["*.json"])] == ["config.json"]
+        only = Path(tmp) / "only"
+        mirror(snap, only, ["pbmc.h5ad"])
+        assert sorted(f.name for f in only.iterdir()) == ["pbmc.h5ad"]
+        (snap / "pbmc_50k.h5ad").unlink()
 
         meta = {"repo": "org/model", "sha": "abc"}
         materialize(
