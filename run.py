@@ -19,6 +19,7 @@ stage and be handed inputs it does not care about.
 """
 
 import argparse
+import fnmatch
 import json
 import shutil
 import zipfile
@@ -45,31 +46,37 @@ def parse_outputs(values, output_dir=None):
     return outputs
 
 
-def snapshot_files(snapshot: Path):
-    """Payload files in a snapshot dir, skipping hub bookkeeping (.cache/, dotfiles)."""
+def snapshot_files(snapshot: Path, patterns=None):
+    """Payload files in a snapshot dir, skipping hub bookkeeping (.cache/, dotfiles).
+
+    `patterns` (the --files globs) keeps only the files they match: a snapshot dir holds every
+    file of that revision already in the cache, not just the ones this download asked for, so
+    without it a second dataset file fetched earlier ends up in this node's output too.
+    """
     return sorted(
         p
         for p in snapshot.rglob("*")
         if p.is_file()
         and not any(part.startswith(".") for part in p.relative_to(snapshot).parts)
+        and (not patterns or any(fnmatch.fnmatch(p.relative_to(snapshot).as_posix(), g) for g in patterns))
     )
 
 
-def mirror(snapshot: Path, out: Path):
+def mirror(snapshot: Path, out: Path, patterns=None):
     """pre-0.7 fallback: copy the snapshot into out under its original filenames.
 
     Deliberately not routed through materialize(): its suffix dispatch is for
     *declared outputs*, and would rewrite every downloaded `*.json` (a config, a
     vocabulary) into a manifest describing itself.
     """
-    for f in snapshot_files(snapshot):
+    for f in snapshot_files(snapshot, patterns):
         dest = out / f.relative_to(snapshot)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(f, dest)
 
 
-def materialize(snapshot: Path, outputs, meta):
-    files = snapshot_files(snapshot)
+def materialize(snapshot: Path, outputs, meta, patterns=None):
+    files = snapshot_files(snapshot, patterns)
     if not files:
         raise SystemExit(f"error: nothing downloaded into {snapshot}")
     for oid, dest in outputs.items():
@@ -109,12 +116,14 @@ def main():
 
     from huggingface_hub import snapshot_download
 
+    patterns = args.files.split(",") if args.files else None
+
     snapshot = Path(
         snapshot_download(
             args.repo,
             repo_type=args.repo_type,
             revision=args.revision,
-            allow_patterns=args.files.split(",") if args.files else None,
+            allow_patterns=patterns,
             cache_dir=args.cache_dir,
         )
     )
@@ -128,9 +137,9 @@ def main():
 
     outputs = parse_outputs(args.output, args.output_dir)
     if not outputs:
-        mirror(snapshot, Path(args.output_dir or "."))  # pre-0.7 API: no --output flags
+        mirror(snapshot, Path(args.output_dir or "."), patterns)  # pre-0.7 API: no --output flags
     else:
-        materialize(snapshot, outputs, meta)
+        materialize(snapshot, outputs, meta, patterns)
 
 
 if __name__ == "__main__":
